@@ -1,7 +1,7 @@
 // NeuralCafe MVP - Backend Server (Groq + Supabase Edition)
 // Run with: node server.js
 
-require("dotenv").config({ path: __dirname + "/.env" });
+require("dotenv").config({ path: "B:\\neuralcafe-mvp\\backend\\.env" });
 const express = require("express");
 const cors = require("cors");
 const Groq = require("groq-sdk");
@@ -14,8 +14,8 @@ app.use(express.json());
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const supabase = createClient(
-  "https://kdviazumpgooatuolmdl.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkdmlhenVtcGdvb2F0dW9sbWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjIzNjYsImV4cCI6MjA5MjY5ODM2Nn0.3ukX_fIFXsSd6hqbGekTgBffl-OrL7Y0g7FNvTC0UN8"
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
 );
 
 const PLANS = {
