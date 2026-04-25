@@ -1,7 +1,7 @@
 // NeuralCafe MVP - Backend Server (Groq + Supabase Edition)
 // Run with: node server.js
 
-require("dotenv").config({ path: "B:\\neuralcafe-mvp\\backend\\.env" });
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const Groq = require("groq-sdk");
