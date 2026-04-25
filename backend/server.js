@@ -231,7 +231,7 @@ app.get("/api/session/:sessionId", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`\n🚀 NeuralCafe backend running on http://localhost:${PORT}`);
   console.log(`⚡ Using Groq — Model: llama-3.3-70b-versatile`);
   console.log(`🗄️  Supabase: ${process.env.SUPABASE_URL ? "✓ Connected" : "✗ MISSING!"}`);
