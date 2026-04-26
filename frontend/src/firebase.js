@@ -28,7 +28,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRe
 
 const firebaseConfig = {
   apiKey: "AIzaSyAtj9C6-V2fQhP96RQf9yT1RN6uLyH0ek0",
-  authDomain: "neuralcafe.firebaseapp.com",
+  authDomain: "neuralcafe-mvp.vercel.app",
   projectId: "neuralcafe",
   storageBucket: "neuralcafe.firebasestorage.app",
   messagingSenderId: "712858222741",
