@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { signInWithGoogle, logOut, auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { signInWithGoogle, logOut, auth, getRedirectUser } from "./firebase";
 
 const API = "https://neuralcafe-mvp.onrender.com/api";
 
@@ -246,6 +247,23 @@ export default function App() {
 
   // Auto-login if saved
   useEffect(() => {
+     // Handle mobile Google redirect
+  getRedirectUser().then(user => {
+    if (user) {
+      fetch(`${API}/user`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email }),
+      }).then(r => r.json()).then(d => {
+        setUserId(d.userId);
+        setUserEmail(d.email);
+        setBalance(d.balance);
+        localStorage.setItem("nc_userId", d.userId);
+        localStorage.setItem("nc_email", d.email);
+        setScreen("wallet");
+      });
+    }
+  });
     const savedId = localStorage.getItem("nc_userId");
     const savedEmail = localStorage.getItem("nc_email");
     if (savedId && savedEmail) {
