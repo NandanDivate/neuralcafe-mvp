@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-const API = "http://localhost:3001/api";
+const API = "https://neuralcafe-mvp.onrender.com/api";
 
 const PLANS = {
   "15min": { label: "15 min", price: 5, desc: "Quick burst" },
