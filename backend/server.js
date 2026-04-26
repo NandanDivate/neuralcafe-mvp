@@ -13,9 +13,13 @@ app.use(express.json());
 
 
 
+// const supabase = createClient(
+//   process.env.SUPABASE_URL,
+//   process.env.SUPABASE_ANON_KEY
+// );
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  "https://kdviazumpgooatuolmdl.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkdmlhenVtcGdvb2F0dW9sbWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjIzNjYsImV4cCI6MjA5MjY5ODM2Nn0.3ukX_fIFXsSd6hqbGekTgBffl-OrL7Y0g7FNvTC0UN8"
 );
 
 const PLANS = {
