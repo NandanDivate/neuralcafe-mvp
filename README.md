@@ -167,8 +167,8 @@ CREATE TABLE sessions (
 ## Built By
 
 **Nandan A Divate**  
-B.E. Computer Science · KLE Technological University, Hubli  
-[GitHub](https://github.com/NandanDivate) · [LinkedIn](#)
+B.E. Computer Science and Engineering ·  Dayananda Sagar Academy of Technology and Management
+[GitHub](https://github.com/NandanDivate) · [LinkedIn](https://www.linkedin.com/in/nandandivate)
 
 ---
 
