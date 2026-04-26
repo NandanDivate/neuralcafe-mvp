@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { signInWithGoogle, logOut, auth } from "./firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 const API = "https://neuralcafe-mvp.onrender.com/api";
 
@@ -272,16 +274,15 @@ export default function App() {
   }, [session]);
 
   async function handleLogin() {
-    if (!email || !email.includes("@")) return setStatus("Enter a valid email");
-    setLoading(true);
-    setStatus("");
+  setLoading(true);
+  setStatus("");
+  try {
+    const user = await signInWithGoogle();
     const res = await fetch(`${API}/user`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email: user.email }),
     }).then(r => r.json());
-
-    if (res.error) { setStatus("❌ " + res.error); setLoading(false); return; }
 
     setUserId(res.userId);
     setUserEmail(res.email);
@@ -290,7 +291,11 @@ export default function App() {
     localStorage.setItem("nc_email", res.email);
     setLoading(false);
     setScreen("wallet");
+  } catch (error) {
+    setStatus("❌ Login failed: " + error.message);
+    setLoading(false);
   }
+}
 
   async function handleTopup() {
     const amt = parseFloat(topupAmt);
@@ -348,31 +353,66 @@ export default function App() {
     setLoading(false);
   }
 
-  function handleLogout() {
-    localStorage.removeItem("nc_userId");
-    localStorage.removeItem("nc_email");
-    setUserId(null); setUserEmail(""); setBalance(0);
-    setSession(null); setMessages([]);
-    setScreen("login");
-  }
+  async function handleLogout() {
+  await logOut();
+  localStorage.removeItem("nc_userId");
+  localStorage.removeItem("nc_email");
+  setUserId(null); setUserEmail(""); setBalance(0);
+  setSession(null); setMessages([]);
+  setScreen("login");
+}
 
   // ── LOGIN ──
   if (screen === "login") return (
-    <div style={S.app}>
-      <div style={S.card}>
-        <div style={S.label}>// NeuralCafe</div>
-        <div style={S.h1}>Welcome back.</div>
-        <div style={{ ...S.muted, marginBottom: 20 }}>Enter your email to access your wallet. New users are created automatically.</div>
-        <input style={S.input} type="email" placeholder="you@email.com"
-          value={email} onChange={e => setEmail(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && handleLogin()} />
-        <button style={S.btn} onClick={handleLogin} disabled={loading}>
-          {loading ? "Loading..." : "Continue →"}
-        </button>
-        {status && <div style={{ marginTop: 12, fontSize: 13, color: "#ff6b35", fontFamily: "monospace" }}>{status}</div>}
+  <div style={S.app}>
+    <div style={S.card}>
+      <div style={S.label}>// NeuralCafe</div>
+      <div style={S.h1}>Welcome.</div>
+      <div style={{ ...S.muted, marginBottom: 28 }}>
+        Sign in to access your wallet and start a session.
+      </div>
+
+      <button
+        onClick={handleLogin}
+        disabled={loading}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          background: "#fff",
+          color: "#1a1a1a",
+          border: "1px solid #e0e0e0",
+          borderRadius: 4,
+          padding: "0.85rem 1.5rem",
+          fontFamily: "inherit",
+          fontWeight: 600,
+          fontSize: 15,
+          cursor: "pointer",
+        }}
+      >
+        <img
+          src="https://www.google.com/favicon.ico"
+          width={18}
+          height={18}
+          alt="Google"
+        />
+        {loading ? "Signing in..." : "Continue with Google"}
+      </button>
+
+      {status && (
+        <div style={{ marginTop: 12, fontSize: 13, color: "#ff6b35", fontFamily: "monospace" }}>
+          {status}
+        </div>
+      )}
+
+      <div style={{ ...S.muted, marginTop: 20, fontSize: 11, textAlign: "center" }}>
+        🔒 We only use your email to identify your wallet
       </div>
     </div>
-  );
+  </div>
+);
 
   // ── WALLET ──
   if (screen === "wallet") return (
