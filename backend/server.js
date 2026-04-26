@@ -11,7 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -175,7 +175,7 @@ app.post("/api/chat", async (req, res) => {
 
     if (!sessionHistories[sessionId]) sessionHistories[sessionId] = [];
     sessionHistories[sessionId].push({ role: "user", content: message });
-
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const response = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       max_tokens: 1024,
