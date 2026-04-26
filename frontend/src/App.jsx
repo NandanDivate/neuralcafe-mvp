@@ -127,9 +127,107 @@ function Message({ role, content }) {
     </div>
   );
 }
+function LandingPage({ onStart }) {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#0a0a08",
+      color: "#e8e8e0",
+      fontFamily: "'Segoe UI', sans-serif",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "2rem",
+      textAlign: "center",
+    }}>
+      <div style={{
+        fontFamily: "monospace",
+        fontSize: 13,
+        color: "#c8f045",
+        letterSpacing: "0.2em",
+        textTransform: "uppercase",
+        marginBottom: "2rem",
+        border: "1px solid rgba(200,240,69,0.3)",
+        padding: "0.4rem 1rem",
+        borderRadius: 2,
+      }}>
+        ● NeuralCafe
+      </div>
 
+      <h1 style={{
+        fontSize: "clamp(2.5rem, 6vw, 5rem)",
+        fontWeight: 800,
+        letterSpacing: -2,
+        lineHeight: 1.05,
+        marginBottom: "1.5rem",
+        maxWidth: 700,
+      }}>
+        Pro AI.<br />
+        <span style={{ color: "#c8f045" }}>Pay per session.</span>
+      </h1>
+
+      <p style={{
+        fontSize: "1.1rem",
+        color: "#6b6b60",
+        lineHeight: 1.7,
+        maxWidth: 480,
+        marginBottom: "3rem",
+      }}>
+        Access powerful AI models without a monthly subscription.
+        Top up your wallet, pick a session, start chatting.
+        Like a cyber café — but for AI.
+      </p>
+
+      <div style={{ display: "flex", gap: "3rem", marginBottom: "3rem", flexWrap: "wrap", justifyContent: "center" }}>
+        {[
+          { num: "₹5", label: "per session" },
+          { num: "0", label: "subscriptions" },
+          { num: "24/7", label: "available" },
+        ].map((s) => (
+          <div key={s.label}>
+            <div style={{ fontSize: "2rem", fontWeight: 800, color: "#c8f045", letterSpacing: -1 }}>{s.num}</div>
+            <div style={{ fontSize: "0.75rem", color: "#6b6b60", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 4 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <button onClick={onStart} style={{
+        background: "#c8f045",
+        color: "#0a0a08",
+        border: "none",
+        borderRadius: 3,
+        padding: "1rem 2.5rem",
+        fontFamily: "inherit",
+        fontWeight: 700,
+        fontSize: "1rem",
+        cursor: "pointer",
+        marginBottom: "1rem",
+      }}>
+        Start a Session →
+      </button>
+
+      <div style={{ fontSize: 12, color: "#6b6b60", fontFamily: "monospace" }}>
+        No account needed to explore · Pay only when you chat
+      </div>
+
+      <div style={{ display: "flex", gap: "0.5rem", marginTop: "3rem", flexWrap: "wrap", justifyContent: "center" }}>
+        {["Llama 3.3 70B", "GPT-4o (soon)", "Claude (soon)"].map(m => (
+          <div key={m} style={{
+            fontFamily: "monospace",
+            fontSize: 11,
+            color: "#6b6b60",
+            border: "1px solid #2a2a26",
+            borderRadius: 2,
+            padding: "0.3rem 0.8rem",
+          }}>{m}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
 export default function App() {
-  const [screen, setScreen] = useState("login");
+  const [screen, setScreen] = useState("landing");
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState(null);
   const [userEmail, setUserEmail] = useState("");
@@ -338,6 +436,9 @@ export default function App() {
   );
 
   // ── CHAT ──
+  if (screen === "landing") return (
+  <LandingPage onStart={() => setScreen("login")} />
+);
   return (
     <div style={{ ...S.app, padding: "1rem" }}>
       <div style={{ width: "100%", maxWidth: 700, display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
