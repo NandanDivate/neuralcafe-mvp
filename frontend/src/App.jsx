@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { signInWithGoogle, logOut, auth } from "./firebase";
+//import { signInWithGoogle, logOut, auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { signInWithGoogle, logOut, auth, getRedirectUser } from "./firebase";
 
@@ -112,7 +112,7 @@ function Timer({ endsAt }) {
   );
 }
 
-function Message({ role, content }) {
+function Message({ role, content, model }) {
   return (
     <div style={{ marginBottom: 16, display: "flex", gap: 10, alignItems: "flex-start" }}>
       <div style={{
@@ -122,7 +122,7 @@ function Message({ role, content }) {
         color: role === "user" ? "#c8f045" : "#6b6b60",
         border: `1px solid ${role === "user" ? "rgba(200,240,69,0.3)" : "#2a2a26"}`,
       }}>
-        {role === "user" ? "YOU" : "AI"}
+        {role === "user" ? "YOU" : (model || "AI")}
       </div>
       <div style={{ fontSize: 14, lineHeight: 1.7, color: role === "user" ? "#e8e8e0" : "#c8c8b8", flex: 1, whiteSpace: "pre-wrap" }}>
         {content}
@@ -243,6 +243,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [tokenInfo, setTokenInfo] = useState(null);
+  const [selectedModel, setSelectedModel] = useState("llama");
   const bottomRef = useRef(null);
 
   // Auto-login if saved
@@ -342,7 +343,7 @@ export default function App() {
     if (res.error) { setStatus("❌ " + res.error); setLoading(false); return; }
 
     setBalance(res.balance);
-    setSession({ sessionId: res.sessionId, endsAt: res.endsAt });
+    setSession({ sessionId: res.sessionId, endsAt: res.endsAt, model: selectedModel });
     setMessages([{ role: "assistant", content: `Session started! You have ${PLANS[selectedPlan].label} with the AI. How can I help you?` }]);
     setScreen("chat");
     setLoading(false);
@@ -354,18 +355,20 @@ export default function App() {
     setInput("");
     setMessages(m => [...m, { role: "user", content: userMsg }]);
     setLoading(true);
+    
 
     const res = await fetch(`${API}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId: session.sessionId, message: userMsg }),
+      body: JSON.stringify({ sessionId: session.sessionId, message: userMsg, model: selectedModel }),
     }).then(r => r.json());
 
     if (res.error) {
       setMessages(m => [...m, { role: "assistant", content: `⚠️ ${res.error}` }]);
       if (res.error.includes("expired") || res.error.includes("Token")) setSession(null);
     } else {
-      setMessages(m => [...m, { role: "assistant", content: res.reply }]);
+      
+      setMessages(m => [...m, { role: "assistant", content: res.reply, model: selectedModel === "gemini" ? "GEMINI" : "LLAMA" }]);
       setTokenInfo({ used: res.tokensUsed, max: res.maxTokens });
     }
     setLoading(false);
@@ -484,6 +487,21 @@ export default function App() {
             </div>
           ))}
         </div>
+        <div style={{ marginBottom: 16 }}>
+  <div style={{ ...S.label, marginBottom: 8 }}>// Choose Model</div>
+  <div style={{ display: "flex", gap: 10 }}>
+    {[
+      { id: "llama", label: "Llama 3.3 70B", tag: "Free" },
+      { id: "gemini", label: "Gemini 2.0 Flash", tag: "Free" },
+    ].map(m => (
+      <div key={m.id} onClick={() => setSelectedModel(m.id)}
+        style={S.planCard(selectedModel === m.id)}>
+        <div style={{ fontWeight: 700, fontSize: 13 }}>{m.label}</div>
+        <div style={{ color: "#c8f045", fontFamily: "monospace", fontSize: 11, marginTop: 4 }}>{m.tag}</div>
+      </div>
+    ))}
+  </div>
+</div>
         <button style={S.btn} onClick={handleStartSession} disabled={loading || balance < PLANS[selectedPlan].price}>
           {loading ? "Starting..." : balance < PLANS[selectedPlan].price ? `Need ₹${PLANS[selectedPlan].price - balance} more` : `Start ${PLANS[selectedPlan].label} →`}
         </button>

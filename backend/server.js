@@ -5,6 +5,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const Groq = require("groq-sdk");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
@@ -160,9 +161,10 @@ app.post("/api/session/start", async (req, res) => {
   }
 });
 
+
 // 5. Chat with AI
 app.post("/api/chat", async (req, res) => {
-  const { sessionId, message } = req.body;
+  const { sessionId, message, model } = req.body;
 
   try {
     const { data: session, error } = await supabase
@@ -178,18 +180,35 @@ app.post("/api/chat", async (req, res) => {
 
     if (!sessionHistories[sessionId]) sessionHistories[sessionId] = [];
     sessionHistories[sessionId].push({ role: "user", content: message });
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    const response = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      max_tokens: 1024,
-      messages: [
-        { role: "system", content: "You are a helpful AI assistant on NeuralCafe, a pay-per-session AI platform. Be helpful, concise, and friendly." },
-        ...sessionHistories[sessionId],
-      ],
-    });
 
-    const reply = response.choices[0].message.content;
-    const tokensUsed = response.usage.prompt_tokens + response.usage.completion_tokens;
+    let reply;
+    let tokensUsed;
+
+    if (model === "gemini") {
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const history = sessionHistories[sessionId].slice(0, -1).map(m => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
+      const chat = geminiModel.startChat({ history });
+      const result = await chat.sendMessage(message);
+      reply = result.response.text();
+      tokensUsed = Math.ceil(reply.length / 4); // Gemini doesn't return token count, estimate it
+    } else {
+      const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+      const response = await groq.chat.completions.create({
+        model: "llama-3.3-70b-versatile",
+        max_tokens: 1024,
+        messages: [
+          { role: "system", content: "You are a helpful AI assistant on NeuralCafe, a pay-per-session AI platform. Be helpful, concise, and friendly." },
+          ...sessionHistories[sessionId],
+        ],
+      });
+      reply = response.choices[0].message.content;
+      tokensUsed = response.usage.prompt_tokens + response.usage.completion_tokens;
+    }
+
     const newTokensUsed = session.tokens_used + tokensUsed;
 
     await supabase
@@ -201,7 +220,7 @@ app.post("/api/chat", async (req, res) => {
 
     const timeLeft = Math.max(0, Math.floor((new Date(session.ends_at) - Date.now()) / 1000));
 
-    console.log(`🤖 [${sessionId}] Tokens: ${newTokensUsed}/${session.max_tokens} | Time left: ${timeLeft}s`);
+    console.log(`🤖 [${sessionId}] Model: ${model || "llama"} | Tokens: ${newTokensUsed}/${session.max_tokens} | Time left: ${timeLeft}s`);
     res.json({ reply, tokensUsed: newTokensUsed, maxTokens: session.max_tokens, timeLeft, tokensLeft: session.max_tokens - newTokensUsed });
 
   } catch (error) {
