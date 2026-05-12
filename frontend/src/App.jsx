@@ -248,7 +248,8 @@ export default function App() {
 
   // Auto-login if saved
   useEffect(() => {
-     // Handle mobile Google redirect
+    // Handle mobile Google redirect
+    console.log("Redirect user:", user);
   getRedirectUser().then(user => {
     if (user) {
       fetch(`${API}/user`, {
