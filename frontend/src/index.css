@@ -1,111 +1,359 @@
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --font-system: 'Segoe UI', -apple-system, BlinkMacSystemFont, Tahoma, Geneva, Verdana, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, 'Cascadia Code', monospace;
+  
+  /* Windows 7 Aero Palette */
+  --aero-sky: #2b78e4;
+  --aero-blue: #0078d7;
+  --aero-cyan: #38bdf8;
+  --aero-teal: #0ea5e9;
+  --aero-glow: rgba(56, 189, 248, 0.45);
+  --aero-glass-bg: rgba(14, 28, 48, 0.78);
+  --aero-card-bg: rgba(18, 36, 62, 0.65);
+  --aero-input-bg: rgba(9, 20, 36, 0.75);
+  --aero-glass-border: rgba(255, 255, 255, 0.28);
+  --aero-glass-border-light: rgba(255, 255, 255, 0.45);
+  
+  --text-main: #f0f6fc;
+  --text-secondary: #94a9c4;
+  --text-muted: #647b99;
+  --text-highlight: #7dd3fc;
+  
+  --danger: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  padding: 0;
+  font-family: var(--font-system);
+  color: var(--text-main);
+  background: radial-gradient(circle at 50% 15%, #1d4875 0%, #102e52 35%, #08172c 70%, #030b17 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Background atmospheric auroras */
+body::before {
+  content: '';
+  position: fixed;
+  top: -10%;
+  left: 15%;
+  width: 70vw;
+  height: 50vh;
+  background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.18) 0%, rgba(30, 64, 175, 0.08) 50%, transparent 80%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+/* Windows 7 Aero Window Frame */
+.aero-window {
+  background: var(--aero-glass-bg);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--aero-glass-border);
+  border-radius: 8px;
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 var(--aero-glass-border-light),
+    inset 0 0 20px rgba(56, 189, 248, 0.08);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+.aero-window:hover {
+  box-shadow: 
+    0 28px 70px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 0 25px rgba(56, 189, 248, 0.18);
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
+/* Windows 7 Title Bar */
+.aero-titlebar {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.06) 45%, rgba(0, 0, 0, 0.08) 50%, rgba(0, 0, 0, 0.22) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.aero-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.aero-window-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.aero-control-btn {
+  width: 24px;
+  height: 18px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(0, 0, 0, 0.15) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  transition: all 0.15s ease;
+}
+
+.aero-control-btn:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(0, 0, 0, 0.1) 100%);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+.aero-control-btn.close:hover {
+  background: linear-gradient(180deg, #f87171 0%, #dc2626 50%, #b91c1c 100%);
+  border-color: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+  color: #ffffff;
+}
+
+/* Authentic Windows 7 Aero Glossy Buttons */
+.aero-btn {
+  font-family: var(--font-system);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
   border-radius: 4px;
-  color: var(--text-h);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease-in-out;
+  user-select: none;
+  outline: none;
+  position: relative;
+  text-decoration: none;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+.aero-btn-primary {
+  color: #ffffff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 48%, rgba(0, 0, 0, 0.08) 50%, rgba(0, 0, 0, 0.22) 100%), #1d68c4;
+  border: 1px solid #17549e;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
+
+.aero-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.2) 48%, rgba(0, 0, 0, 0.05) 50%, rgba(0, 0, 0, 0.18) 100%), #257be3;
+  border-color: #38bdf8;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 0 14px rgba(56, 189, 248, 0.65),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+.aero-btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.05) 50%, rgba(255, 255, 255, 0.15) 100%), #16539c;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.aero-btn-secondary {
+  color: var(--text-main);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 48%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.25) 100%), rgba(20, 38, 64, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.aero-btn-secondary:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 48%, rgba(0, 0, 0, 0.05) 50%, rgba(0, 0, 0, 0.2) 100%), rgba(28, 52, 85, 0.7);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 0 10px rgba(56, 189, 248, 0.35);
+  transform: translateY(-1px);
+}
+
+.aero-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(40%);
+}
+
+/* Windows 7 Inputs */
+.aero-input {
+  width: 100%;
+  background: var(--aero-input-bg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-family: var(--font-system);
+  font-size: 14px;
+  outline: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.aero-input:focus {
+  border-color: var(--aero-cyan);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+    0 0 12px rgba(56, 189, 248, 0.45);
+}
+
+/* Windows 7 Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(10, 20, 36, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(56, 189, 248, 0.4) 100%);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(56, 189, 248, 0.7) 100%);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+/* Markdown Content Aesthetics */
+.markdown-body {
+  font-family: var(--font-system);
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: #e2e8f0;
+}
+
+.markdown-body p {
+  margin: 0 0 14px 0;
+}
+
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  color: #ffffff;
+  font-weight: 700;
+  margin: 18px 0 10px 0;
+  line-height: 1.3;
+}
+
+.markdown-body h1 {
+  font-size: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 6px;
+}
+
+.markdown-body h2 {
+  font-size: 17px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 4px;
+}
+
+.markdown-body h3 {
+  font-size: 15px;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin: 8px 0 14px 0;
+  padding-left: 22px;
+}
+
+.markdown-body li {
+  margin-bottom: 4px;
+}
+
+.markdown-body blockquote {
+  margin: 12px 0;
+  padding: 8px 16px;
+  background: rgba(56, 189, 248, 0.08);
+  border-left: 3px solid var(--aero-cyan);
+  border-radius: 0 4px 4px 0;
+  color: #bae6fd;
+  font-style: italic;
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 13.5px;
+  background: rgba(10, 22, 38, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.markdown-body th,
+.markdown-body td {
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: left;
+}
+
+.markdown-body th {
+  background: rgba(56, 189, 248, 0.15);
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.markdown-body tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.markdown-body a {
+  color: var(--aero-cyan);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--aero-cyan);
+}
+
+.markdown-body a:hover {
+  color: #7dd3fc;
+  border-bottom-style: solid;
+}
+
