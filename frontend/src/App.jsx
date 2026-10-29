@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-//import { signInWithGoogle, logOut, auth } from "./firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { signInWithGoogle, logOut, auth, getRedirectUser } from "./firebase";
+import { signInWithGoogle, logOut, auth, getRedirectUser, onAuthStateChanged } from "./firebase";
 
 const API = import.meta.env.VITE_API_URL || "https://neuralcafe-mvp.onrender.com/api";
 
@@ -246,36 +244,64 @@ export default function App() {
   const [selectedModel, setSelectedModel] = useState("gpt-oss");
   const bottomRef = useRef(null);
 
-  // Auto-login if saved
-  useEffect(() => {
-    // Handle mobile Google redirect
-   // console.log("Redirect user:", user); //last change 
-  getRedirectUser().then(user => {
-    if (user) {
-      fetch(`${API}/user`, {
+  // Sync user with backend & local storage
+  async function syncUserWithBackend(emailAddress) {
+    if (!emailAddress) return;
+    try {
+      const res = await fetch(`${API}/user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email }),
-      }).then(r => r.json()).then(d => {
-        setUserId(d.userId);
-        setUserEmail(d.email);
-        setBalance(d.balance);
-        localStorage.setItem("nc_userId", d.userId);
-        localStorage.setItem("nc_email", d.email);
+        body: JSON.stringify({ email: emailAddress }),
+      }).then(r => r.json());
+
+      if (res && res.userId) {
+        setUserId(res.userId);
+        setUserEmail(res.email);
+        setBalance(typeof res.balance === "number" ? res.balance : 0);
+        localStorage.setItem("nc_userId", res.userId);
+        localStorage.setItem("nc_email", res.email);
         setScreen("wallet");
-      });
+        return res;
+      }
+    } catch (err) {
+      console.error("Backend sync failed:", err);
     }
-  });
+  }
+
+  // Auto-login & Auth state listener
+  useEffect(() => {
+    // 1. Handle redirect result if returning from mobile redirect
+    getRedirectUser().then(user => {
+      if (user && user.email) {
+        syncUserWithBackend(user.email);
+      }
+    });
+
+    // 2. Listen to Firebase auth state changes (popups, redirects, persistent sessions)
+    const unsubscribe = onAuthStateChanged(auth, user => {
+      if (user && user.email) {
+        syncUserWithBackend(user.email);
+      }
+    });
+
+    // 3. Fallback to localStorage for instant UI restoration
     const savedId = localStorage.getItem("nc_userId");
     const savedEmail = localStorage.getItem("nc_email");
     if (savedId && savedEmail) {
       setUserId(savedId);
       setUserEmail(savedEmail);
-      // Refresh balance
       fetch(`${API}/wallet/${savedId}`)
         .then(r => r.json())
-        .then(d => { setBalance(d.balance); setScreen("wallet"); });
+        .then(d => {
+          if (d && typeof d.balance !== "undefined") {
+            setBalance(d.balance);
+            setScreen("wallet");
+          }
+        })
+        .catch(console.error);
     }
+
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -294,28 +320,20 @@ export default function App() {
   }, [session]);
 
   async function handleLogin() {
-  setLoading(true);
-  setStatus("");
-  try {
-    const user = await signInWithGoogle();
-    const res = await fetch(`${API}/user`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user.email }),
-    }).then(r => r.json());
-
-    setUserId(res.userId);
-    setUserEmail(res.email);
-    setBalance(res.balance);
-    localStorage.setItem("nc_userId", res.userId);
-    localStorage.setItem("nc_email", res.email);
-    setLoading(false);
-    setScreen("wallet");
-  } catch (error) {
-    setStatus("❌ Login failed: " + error.message);
-    setLoading(false);
+    setLoading(true);
+    setStatus("");
+    try {
+      const user = await signInWithGoogle();
+      if (user && user.email) {
+        await syncUserWithBackend(user.email);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Login failed:", error);
+      setStatus("❌ Login failed: " + error.message);
+      setLoading(false);
+    }
   }
-}
 
   async function handleTopup() {
     const amt = parseFloat(topupAmt);
