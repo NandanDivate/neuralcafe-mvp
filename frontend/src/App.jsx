@@ -5,7 +5,7 @@ import MarkdownMessage from "./MarkdownMessage";
 const API = import.meta.env.VITE_API_URL || "https://neuralcafe-mvp.onrender.com/api";
 
 const PLANS = {
-  "15min": { label: "15 Minutes", price: 5, tokens: "20,000", desc: "Quick burst · Ideal for rapid queries & debugging" },
+  "15min": { label: "15 Minutes", price: 5, tokens: "20,000", desc: "Quick burst · Rapid queries & debugging" },
   "30min": { label: "30 Minutes", price: 10, tokens: "40,000", desc: "Standard session · Deep research & code drafting (Popular)" },
   "1hr":   { label: "1 Hour", price: 18, tokens: "80,000", desc: "Extended focus · Multi-step architecture & heavy tasks" },
 };
@@ -18,41 +18,31 @@ const MODELS = [
 
 function WindowsOrb() {
   return (
-    <div style={{
-      width: 20,
-      height: 20,
-      borderRadius: "50%",
-      background: "radial-gradient(circle at 35% 35%, #93c5fd 0%, #2563eb 55%, #1e3a8a 100%)",
-      boxShadow: "0 0 10px rgba(59, 130, 246, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.8)",
-      border: "1px solid rgba(255, 255, 255, 0.4)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      flexShrink: 0,
-    }}>
-      <div style={{
-        width: 6,
-        height: 6,
-        borderRadius: "50%",
-        background: "rgba(255, 255, 255, 0.8)",
-        filter: "blur(0.5px)",
-      }} />
+    <div className="nc-orb" aria-hidden="true">
+      <div className="nc-orb-inner" />
     </div>
   );
 }
 
-function WindowHeader({ title, onClose, onMinimize, onMaximize }) {
+function WindowHeader({ title, onClose, closeAriaLabel }) {
   return (
-    <div className="aero-titlebar">
-      <div className="aero-title">
+    <div className="nc-titlebar">
+      <div className="nc-title">
         <WindowsOrb />
-        <span>{title}</span>
+        <span className="nc-title-text">{title}</span>
       </div>
-      <div className="aero-window-controls">
-        <button className="aero-control-btn" onClick={onMinimize} title="Minimize">_</button>
-        <button className="aero-control-btn" onClick={onMaximize} title="Maximize">□</button>
-        <button className="aero-control-btn close" onClick={onClose} title="Close">✕</button>
-      </div>
+      {onClose && (
+        <div className="nc-window-controls">
+          <button
+            className="nc-close-btn"
+            onClick={onClose}
+            aria-label={closeAriaLabel || "Close window"}
+            title="Close"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -70,52 +60,49 @@ function Timer({ endsAt }) {
   const m = String(Math.floor(left / 60)).padStart(2, "0");
   const s = String(left % 60).padStart(2, "0");
   const isUrgent = left < 120;
-  const totalDuration = 1800; // Reference for progress bar (up to 30m default)
+  const totalDuration = 1800; // Reference for progress bar
   const percentLeft = Math.min(100, Math.max(0, (left / totalDuration) * 100));
 
   return (
     <div style={{
-      background: "rgba(9, 20, 36, 0.75)",
-      border: "1px solid rgba(255, 255, 255, 0.15)",
-      borderRadius: 6,
-      padding: "10px 16px",
+      background: "var(--nc-bg-elevated)",
+      border: "1px solid var(--nc-border)",
+      borderRadius: "var(--radius-sm)",
+      padding: "6px 12px",
       display: "flex",
       alignItems: "center",
-      justifyContent: "space-between",
-      gap: 16,
+      gap: 14,
+      minWidth: 0,
     }}>
       <div>
-        <div style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
+        <div style={{ fontSize: 10, color: "var(--nc-text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>
           Session Clock
         </div>
         <div style={{
           fontFamily: "var(--font-system)",
-          fontSize: 26,
+          fontSize: 20,
           fontWeight: 700,
-          color: isUrgent ? "#f87171" : "#38bdf8",
-          textShadow: isUrgent ? "0 0 10px rgba(239, 68, 68, 0.6)" : "0 0 10px rgba(56, 189, 248, 0.6)",
-          letterSpacing: 1.5,
+          color: isUrgent ? "var(--nc-danger)" : "var(--nc-champagne)",
+          letterSpacing: 1,
           marginTop: -2,
         }}>
           {m}:{s}
         </div>
       </div>
 
-      <div style={{ flex: 1, maxWidth: 220 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>
-          <span>Duration Remaining</span>
-          <span>{left > 0 ? `${Math.ceil(left / 60)}m` : "Expired"}</span>
+      <div style={{ minWidth: 90, maxWidth: 140, flex: 1 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--nc-text-muted)", marginBottom: 3 }}>
+          <span>{left > 0 ? `${Math.ceil(left / 60)}m left` : "Expired"}</span>
         </div>
-        <div style={{ height: 8, background: "rgba(0, 0, 0, 0.5)", borderRadius: 4, overflow: "hidden", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
+        <div style={{ height: 6, background: "rgba(0, 0, 0, 0.4)", borderRadius: 3, overflow: "hidden", border: "1px solid var(--nc-border)" }}>
           <div style={{
             height: "100%",
             width: `${percentLeft}%`,
             background: isUrgent
-              ? "linear-gradient(90deg, #ef4444 0%, #f87171 100%)"
-              : "linear-gradient(90deg, #0284c7 0%, #38bdf8 100%)",
-            borderRadius: 3,
+              ? "linear-gradient(90deg, #b91c1c 0%, var(--nc-danger) 100%)"
+              : "linear-gradient(90deg, #9d8354 0%, var(--nc-champagne) 100%)",
+            borderRadius: 2,
             transition: "width 1s linear",
-            boxShadow: isUrgent ? "0 0 8px #ef4444" : "0 0 8px #38bdf8",
           }} />
         </div>
       </div>
@@ -142,33 +129,33 @@ function ChatMessage({ role, content, model }) {
         alignItems: "flex-start",
       }}>
         <div style={{
-          maxWidth: "80%",
-          background: "linear-gradient(180deg, rgba(37, 99, 235, 0.35) 0%, rgba(29, 78, 216, 0.45) 100%)",
-          border: "1px solid rgba(96, 165, 250, 0.45)",
-          borderRadius: "10px 10px 2px 10px",
+          maxWidth: "85%",
+          background: "var(--nc-surface-raised)",
+          border: "1px solid var(--nc-border)",
+          borderRadius: "8px 8px 2px 8px",
           padding: "12px 16px",
-          color: "#f8fafc",
-          boxShadow: "0 4px 14px rgba(0, 0, 0, 0.35)",
+          color: "var(--nc-text)",
+          boxShadow: "0 3px 10px rgba(0, 0, 0, 0.35)",
           lineHeight: 1.6,
           fontSize: 14.5,
           whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
         }}>
           {content}
         </div>
         <div style={{
-          width: 32,
-          height: 32,
+          width: 30,
+          height: 30,
           borderRadius: "50%",
-          background: "linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)",
-          border: "1px solid rgba(255, 255, 255, 0.3)",
-          color: "#ffffff",
+          background: "var(--nc-surface-hover)",
+          border: "1px solid var(--nc-silver)",
+          color: "var(--nc-text-secondary)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: 700,
           flexShrink: 0,
-          boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
         }}>
           YOU
         </div>
@@ -181,81 +168,79 @@ function ChatMessage({ role, content, model }) {
       display: "flex",
       justifyContent: "flex-start",
       marginBottom: 20,
-      gap: 12,
+      gap: 10,
       alignItems: "flex-start",
+      minWidth: 0,
     }}>
       <div style={{
-        width: 32,
-        height: 32,
+        width: 30,
+        height: 30,
         borderRadius: "50%",
-        background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
-        border: "1px solid rgba(56, 189, 248, 0.6)",
-        color: "#ffffff",
+        background: "var(--nc-champagne-surface)",
+        border: "1px solid var(--nc-champagne-muted)",
+        color: "var(--nc-champagne)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: 700,
         flexShrink: 0,
-        boxShadow: "0 0 10px rgba(56, 189, 248, 0.5)",
+        boxShadow: "0 0 8px var(--nc-champagne-glow)",
       }}>
         AI
       </div>
 
       <div style={{
         flex: 1,
-        maxWidth: "88%",
-        background: "rgba(12, 24, 42, 0.85)",
-        border: "1px solid rgba(255, 255, 255, 0.16)",
-        borderRadius: "10px 10px 10px 2px",
+        minWidth: 0,
+        maxWidth: "92%",
+        background: "var(--nc-surface)",
+        border: "1px solid var(--nc-border)",
+        borderRadius: "8px 8px 8px 2px",
         overflow: "hidden",
-        boxShadow: "0 6px 20px rgba(0, 0, 0, 0.45)",
+        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.4)",
       }}>
         {/* Model header bar */}
         <div style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "7px 14px",
-          background: "linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+          padding: "7px 12px",
+          background: "linear-gradient(180deg, var(--nc-titlebar-top) 0%, var(--nc-titlebar-bottom) 100%)",
+          borderBottom: "1px solid var(--nc-border)",
           fontSize: 11.5,
-          color: "var(--text-secondary)",
+          color: "var(--nc-text-secondary)",
+          gap: 8,
+          flexWrap: "wrap",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{
-              background: "rgba(56, 189, 248, 0.15)",
-              color: "#38bdf8",
-              padding: "2px 8px",
-              borderRadius: 3,
-              fontWeight: 600,
-              border: "1px solid rgba(56, 189, 248, 0.3)",
-              fontSize: 11,
-            }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <span className="nc-badge nc-badge-champagne" style={{ fontSize: 10.5, padding: "2px 7px" }}>
               {model || "AI ASSISTANT"}
             </span>
-            <span style={{ color: "var(--text-muted)" }}>· Verified Response</span>
+            <span style={{ color: "var(--nc-text-muted)", fontSize: 11 }}>· Verified Response</span>
           </div>
 
           <button
             onClick={copyFullMessage}
+            aria-label="Copy assistant response"
             style={{
-              background: copied ? "rgba(16, 185, 129, 0.2)" : "rgba(255, 255, 255, 0.08)",
-              border: `1px solid ${copied ? "#10b981" : "rgba(255, 255, 255, 0.15)"}`,
-              color: copied ? "#34d399" : "var(--text-secondary)",
-              borderRadius: 3,
+              background: copied ? "rgba(117, 184, 149, 0.2)" : "rgba(255, 255, 255, 0.08)",
+              border: `1px solid ${copied ? "var(--nc-success)" : "var(--nc-border)"}`,
+              color: copied ? "var(--nc-success)" : "var(--nc-text-secondary)",
+              borderRadius: "var(--radius-sm)",
               padding: "2px 8px",
               fontSize: 11,
+              fontWeight: 600,
               cursor: "pointer",
               transition: "all 0.15s ease",
             }}
           >
-            {copied ? "✓ Copied Response" : "Copy"}
+            {copied ? "✓ Copied" : "Copy"}
           </button>
         </div>
 
         {/* Structured Markdown Content */}
-        <div style={{ padding: "14px 18px" }}>
+        <div style={{ padding: "12px 16px", minWidth: 0 }}>
           <MarkdownMessage content={content} />
         </div>
       </div>
@@ -265,94 +250,72 @@ function ChatMessage({ role, content, model }) {
 
 function LandingPage({ onStart }) {
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "2rem 1rem",
-    }}>
-      <div className="aero-window" style={{ width: "100%", maxWidth: 840 }}>
-        <WindowHeader title="NeuralCafe — Enterprise Pay-Per-Session AI Platform" />
+    <div className="nc-viewport-center">
+      <div className="nc-window" style={{ maxWidth: 880 }}>
+        {/* Requirement 3: Non-dismissible full page layout -> no window controls */}
+        <WindowHeader title="NeuralCafe · Enterprise AI Workstation" />
 
-        <div style={{ padding: "3rem 2.5rem", textAlign: "center" }}>
+        <div style={{ padding: "clamp(1.5rem, 5vw, 3rem)", textAlign: "center" }}>
           <div style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 10,
+            gap: 8,
             padding: "5px 14px",
             borderRadius: 20,
-            background: "rgba(56, 189, 248, 0.12)",
-            border: "1px solid rgba(56, 189, 248, 0.35)",
-            color: "#38bdf8",
-            fontSize: 12,
+            background: "var(--nc-champagne-surface)",
+            border: "1px solid rgba(216, 194, 154, 0.3)",
+            color: "var(--nc-champagne)",
+            fontSize: 11.5,
             fontWeight: 600,
             letterSpacing: "0.05em",
-            marginBottom: "1.5rem",
-            boxShadow: "0 0 14px rgba(56, 189, 248, 0.25)",
+            marginBottom: "1.4rem",
           }}>
             <WindowsOrb />
-            <span>NEURALCAFE · AERO COMPUTE ENVIRONMENT</span>
+            <span>NEURALCAFE WORKSTATION · AERO COMPUTE ARCHITECTURE</span>
           </div>
 
           <h1 style={{
-            fontSize: "clamp(2.2rem, 5vw, 3.8rem)",
+            fontSize: "clamp(2rem, 5vw, 3.4rem)",
             fontWeight: 800,
-            letterSpacing: -1,
-            lineHeight: 1.12,
+            letterSpacing: -0.8,
+            lineHeight: 1.15,
             marginBottom: "1.2rem",
-            color: "#ffffff",
-            textShadow: "0 2px 10px rgba(0, 0, 0, 0.6)",
+            color: "var(--nc-text)",
+            textShadow: "0 2px 8px rgba(0, 0, 0, 0.6)",
           }}>
             Professional AI.<br />
-            <span style={{
-              background: "linear-gradient(180deg, #7dd3fc 0%, #0ea5e9 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}>
+            <span style={{ color: "var(--nc-champagne)" }}>
               Pure Pay-Per-Session.
             </span>
           </h1>
 
           <p style={{
-            fontSize: 16,
-            color: "var(--text-secondary)",
+            fontSize: 15.5,
+            color: "var(--nc-text-secondary)",
             lineHeight: 1.65,
             maxWidth: 620,
-            margin: "0 auto 2.5rem auto",
+            margin: "0 auto 2.2rem auto",
           }}>
-            Direct access to high-parameter intelligence without recurring monthly subscriptions.
-            Recharge your session wallet, select your desired duration, and chat with instant LPU-accelerated models.
+            On-demand access to high-parameter foundation models without recurring subscriptions.
+            Recharge your session balance, select your desired duration, and chat with instant LPU-accelerated intelligence.
           </p>
 
-          {/* 4 Feature value propositions in Aero Glass Cards */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-            gap: 14,
-            marginBottom: "2.8rem",
-            textAlign: "left",
-          }}>
+          {/* 4 Feature value propositions */}
+          <div className="nc-grid-features" style={{ marginBottom: "2.4rem", textAlign: "left" }}>
             {[
-              { title: "₹5 Base Entry", desc: "15 min burst from ₹5", tag: "Affordable" },
-              { title: "120B Flagship", desc: "GPT-OSS 120B Reasoning", tag: "Enterprise" },
-              { title: "Zero Lock-in", desc: "No subscriptions or auto-debits", tag: "Transparent" },
-              { title: "Isolated Memory", desc: "Session cleared on exit", tag: "Confidential" },
+              { title: "₹5 Entry Point", desc: "15 min compute bursts starting at ₹5", tag: "Affordable" },
+              { title: "120B Flagship", desc: "GPT-OSS 120B reasoning & code synthesis", tag: "Enterprise" },
+              { title: "Zero Lock-in", desc: "No subscriptions or auto-renewing debits", tag: "Transparent" },
+              { title: "Isolated Memory", desc: "State and context wiped on session close", tag: "Confidential" },
             ].map((f, i) => (
-              <div key={i} style={{
-                background: "rgba(18, 36, 62, 0.55)",
-                border: "1px solid rgba(255, 255, 255, 0.16)",
-                borderRadius: 6,
-                padding: "16px 14px",
-                boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-              }}>
-                <div style={{ fontSize: 10, color: "var(--aero-cyan)", fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>
+              <div key={i} className="nc-card">
+                <div style={{ fontSize: 10, color: "var(--nc-champagne)", fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>
                   {f.tag}
                 </div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "#ffffff", marginBottom: 4 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--nc-text)", marginBottom: 4 }}>
                   {f.title}
                 </div>
-                <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                <div style={{ fontSize: 12, color: "var(--nc-text-secondary)", lineHeight: 1.45 }}>
                   {f.desc}
                 </div>
               </div>
@@ -361,12 +324,11 @@ function LandingPage({ onStart }) {
 
           <button
             onClick={onStart}
-            className="aero-btn aero-btn-primary"
+            className="nc-btn nc-btn-champagne"
             style={{
-              padding: "14px 38px",
-              fontSize: 16,
-              borderRadius: 6,
-              boxShadow: "0 0 20px rgba(56, 189, 248, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
+              padding: "12px 36px",
+              fontSize: 15.5,
+              borderRadius: "var(--radius-sm)",
             }}
           >
             Start an AI Session →
@@ -376,16 +338,17 @@ function LandingPage({ onStart }) {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+            flexWrap: "wrap",
             gap: 16,
             marginTop: "2.5rem",
             fontSize: 12,
-            color: "var(--text-muted)",
-            borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+            color: "var(--nc-text-muted)",
+            borderTop: "1px solid var(--nc-border)",
             paddingTop: "1.2rem",
           }}>
             <span>🔒 Google OAuth Secured</span>
             <span>·</span>
-            <span>⚡ Groq LPU Powered</span>
+            <span>⚡ Groq Cloud LPU Powered</span>
             <span>·</span>
             <span>🗄️ Supabase PostgreSQL</span>
           </div>
@@ -605,88 +568,106 @@ export default function App() {
   // ── 2. LOGIN SCREEN ──
   if (screen === "login") {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
-        <div className="aero-window" style={{ width: "100%", maxWidth: 460 }}>
+      <div className="nc-viewport-center">
+        <div className="nc-window" style={{ maxWidth: 440 }}>
           <WindowHeader
-            title="Windows Security · User Authentication"
+            title="Authentication · NeuralCafe"
             onClose={() => setScreen("landing")}
-            onMinimize={() => {}}
-            onMaximize={() => {}}
+            closeAriaLabel="Close authentication and return to landing page"
           />
 
-          <div style={{ padding: "2.2rem 2rem" }}>
+          <div style={{ padding: "clamp(1.5rem, 4vw, 2.2rem)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: "1.5rem" }}>
               <div style={{
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 borderRadius: "50%",
-                background: "linear-gradient(135deg, #1e40af 0%, #0369a1 100%)",
-                border: "2px solid rgba(255, 255, 255, 0.4)",
-                boxShadow: "0 0 16px rgba(56, 189, 248, 0.4)",
+                background: "var(--nc-champagne-surface)",
+                border: "1.5px solid var(--nc-champagne-muted)",
+                boxShadow: "0 0 12px var(--nc-champagne-glow)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 22,
+                fontSize: 20,
                 flexShrink: 0,
               }}>
                 👤
               </div>
               <div>
-                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#ffffff" }}>
+                <h2 style={{ margin: 0, fontSize: 18.5, fontWeight: 700, color: "var(--nc-text)" }}>
                   Sign in to NeuralCafe
                 </h2>
-                <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 2 }}>
+                <div style={{ fontSize: 12.5, color: "var(--nc-text-secondary)", marginTop: 2 }}>
                   Secure session wallet authorization
                 </div>
               </div>
             </div>
 
-            <p style={{ fontSize: 13.5, color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "1.8rem" }}>
-              Sign in with your Google account to connect your persistent wallet balance, start AI sessions, and access model compute.
+            <p style={{ fontSize: 13.5, color: "var(--nc-text-secondary)", lineHeight: 1.6, marginBottom: "1.6rem" }}>
+              Authenticate with your Google account to connect your persistent wallet balance, start AI sessions, and access model compute.
             </p>
 
             <button
               onClick={handleLogin}
               disabled={loading}
+              className="nc-btn"
               style={{
                 width: "100%",
+                background: "#ffffff",
+                color: "#1e293b",
+                border: "1px solid #cbd5e1",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.25)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 12,
-                background: "linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%)",
-                color: "#0f172a",
-                border: "1px solid rgba(255, 255, 255, 0.4)",
-                borderRadius: 4,
-                padding: "11px 18px",
-                fontFamily: "var(--font-system)",
-                fontWeight: 600,
-                fontSize: 14.5,
-                cursor: "pointer",
-                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 0 #ffffff",
-                transition: "all 0.15s ease",
+                gap: 10,
               }}
             >
               <img
                 src="https://www.google.com/favicon.ico"
-                width={18}
-                height={18}
+                width={17}
+                height={17}
                 alt="Google"
               />
-              {loading ? "Connecting Google Account..." : "Continue with Google Account"}
+              <span>{loading ? "Connecting Google Account..." : "Continue with Google Account"}</span>
             </button>
 
             {status && (
-              <div style={{ marginTop: 14, fontSize: 12.5, color: "#f87171", background: "rgba(239, 68, 68, 0.1)", padding: "8px 12px", borderRadius: 4, border: "1px solid rgba(239, 68, 68, 0.25)" }}>
+              <div style={{
+                marginTop: 14,
+                fontSize: 12.5,
+                color: "var(--nc-danger)",
+                background: "rgba(225, 139, 135, 0.12)",
+                padding: "8px 12px",
+                borderRadius: "var(--radius-sm)",
+                border: "1px solid rgba(225, 139, 135, 0.3)",
+              }}>
                 {status}
               </div>
             )}
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "2rem", paddingTop: "1.2rem", borderTop: "1px solid rgba(255, 255, 255, 0.1)", fontSize: 11.5, color: "var(--text-muted)" }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: "1.8rem",
+              paddingTop: "1.2rem",
+              borderTop: "1px solid var(--nc-border)",
+              fontSize: 11.5,
+              color: "var(--nc-text-muted)",
+            }}>
               <span>🔒 256-Bit SSL Encrypted</span>
               <button
                 onClick={() => setScreen("landing")}
-                style={{ background: "transparent", border: "none", color: "var(--aero-cyan)", cursor: "pointer", fontSize: 11.5, textDecoration: "underline" }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--nc-champagne)",
+                  cursor: "pointer",
+                  fontSize: 11.5,
+                  textDecoration: "underline",
+                  padding: "4px",
+                }}
               >
                 ← Return to Landing Page
               </button>
@@ -700,83 +681,78 @@ export default function App() {
   // ── 3. WALLET SCREEN ──
   if (screen === "wallet") {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
-        <div className="aero-window" style={{ width: "100%", maxWidth: 520 }}>
+      <div className="nc-viewport-center">
+        <div className="nc-window" style={{ maxWidth: 520 }}>
           <WindowHeader
             title={`NeuralCafe Wallet Manager — ${userEmail}`}
             onClose={() => setScreen("landing")}
-            onMinimize={() => {}}
-            onMaximize={() => {}}
+            closeAriaLabel="Close wallet and return to landing page"
           />
 
-          <div style={{ padding: "2rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.4rem" }}>
-              <div>
-                <div style={{ fontSize: 11, color: "var(--aero-cyan)", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.1em" }}>
+          <div style={{ padding: "clamp(1.4rem, 4vw, 2rem)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.4rem", gap: 10 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 10.5, color: "var(--nc-champagne)", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.08em" }}>
                   Verified Account
                 </div>
-                <div style={{ fontSize: 15, color: "#ffffff", fontWeight: 600 }}>
+                <div style={{ fontSize: 14.5, color: "var(--nc-text)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {userEmail}
                 </div>
               </div>
-              <button className="aero-btn aero-btn-secondary" style={{ fontSize: 11.5, padding: "4px 10px" }} onClick={handleLogout}>
+              <button
+                className="nc-btn nc-btn-silver"
+                style={{ fontSize: 11.5, padding: "5px 12px", minHeight: 32 }}
+                onClick={handleLogout}
+              >
                 Sign Out
               </button>
             </div>
 
             {/* Balance Card */}
             <div style={{
-              background: "linear-gradient(180deg, rgba(30, 64, 175, 0.3) 0%, rgba(15, 23, 42, 0.6) 100%)",
-              border: "1px solid rgba(56, 189, 248, 0.35)",
-              borderRadius: 6,
-              padding: "1.4rem",
-              marginBottom: "1.6rem",
-              boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+              background: "linear-gradient(180deg, rgba(216, 194, 154, 0.08) 0%, rgba(34, 37, 43, 0.9) 100%)",
+              border: "1px solid var(--nc-border)",
+              borderRadius: "var(--radius-md)",
+              padding: "1.2rem 1.4rem",
+              marginBottom: "1.5rem",
+              boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.1)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}>
               <div>
-                <div style={{ fontSize: 12, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 11.5, color: "var(--nc-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Current Wallet Balance
                 </div>
-                <div style={{ fontSize: 36, fontWeight: 800, color: "#ffffff", marginTop: 2, letterSpacing: -1 }}>
+                <div style={{ fontSize: 34, fontWeight: 800, color: "var(--nc-champagne)", marginTop: 2, letterSpacing: -0.5 }}>
                   ₹{balance}
                 </div>
               </div>
-              <div style={{
-                background: "rgba(56, 189, 248, 0.15)",
-                border: "1px solid rgba(56, 189, 248, 0.4)",
-                color: "#38bdf8",
-                borderRadius: 4,
-                padding: "6px 12px",
-                fontSize: 12,
-                fontWeight: 600,
-              }}>
+              <div className="nc-badge nc-badge-champagne">
                 Active · Ready
               </div>
             </div>
 
             {/* Quick Presets */}
-            <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text-main)", marginBottom: 8 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--nc-text)", marginBottom: 8 }}>
               Select Top-up Amount:
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 14 }}>
+            <div className="nc-grid-presets" style={{ marginBottom: 14 }}>
               {[20, 50, 100, 200].map(amt => (
                 <button
                   key={amt}
                   onClick={() => setTopupAmt(String(amt))}
-                  className={`aero-btn ${topupAmt === String(amt) ? "aero-btn-primary" : "aero-btn-secondary"}`}
-                  style={{ padding: "8px 0" }}
+                  className={`nc-btn ${topupAmt === String(amt) ? "nc-btn-champagne" : "nc-btn-silver"}`}
+                  style={{ padding: "8px 0", minHeight: 38 }}
                 >
                   ₹{amt}
                 </button>
               ))}
             </div>
 
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 14 }}>
               <input
-                className="aero-input"
+                className="nc-input"
                 type="number"
                 placeholder="Or enter custom amount in ₹"
                 value={topupAmt}
@@ -787,7 +763,7 @@ export default function App() {
             <button
               onClick={handleTopup}
               disabled={loading}
-              className="aero-btn aero-btn-primary"
+              className="nc-btn nc-btn-champagne"
               style={{ width: "100%", padding: "11px 0", fontSize: 14.5, marginBottom: 10 }}
             >
               {loading ? "Processing..." : `Recharge Wallet (₹${topupAmt || "?"}) →`}
@@ -796,20 +772,29 @@ export default function App() {
             {balance > 0 && (
               <button
                 onClick={() => setScreen("plans")}
-                className="aero-btn aero-btn-secondary"
+                className="nc-btn nc-btn-silver"
                 style={{ width: "100%", padding: "10px 0", fontSize: 13.5 }}
               >
-                Skip Recharge · Launch AI Session →
+                Proceed to Session Plans →
               </button>
             )}
 
             {status && (
-              <div style={{ marginTop: 12, fontSize: 12.5, color: "#38bdf8", textAlign: "center", background: "rgba(56, 189, 248, 0.1)", padding: "6px 12px", borderRadius: 4 }}>
+              <div style={{
+                marginTop: 12,
+                fontSize: 12.5,
+                color: "var(--nc-champagne)",
+                textAlign: "center",
+                background: "var(--nc-champagne-surface)",
+                padding: "7px 12px",
+                borderRadius: "var(--radius-sm)",
+                border: "1px solid rgba(216, 194, 154, 0.25)",
+              }}>
                 {status}
               </div>
             )}
 
-            <div style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "center", marginTop: 16 }}>
+            <div style={{ fontSize: 11, color: "var(--nc-text-muted)", textAlign: "center", marginTop: 16 }}>
               🔒 Demo Environment — Top-ups are simulated instantly for demonstration
             </div>
           </div>
@@ -824,58 +809,58 @@ export default function App() {
     const canAfford = balance >= activePlan.price;
 
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
-        <div className="aero-window" style={{ width: "100%", maxWidth: 640 }}>
+      <div className="nc-viewport-center">
+        <div className="nc-window" style={{ maxWidth: 680 }}>
           <WindowHeader
             title="Session Configuration · NeuralCafe"
             onClose={() => setScreen("wallet")}
-            onMinimize={() => {}}
-            onMaximize={() => {}}
+            closeAriaLabel="Close session configuration and return to wallet"
           />
 
-          <div style={{ padding: "2rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.2rem" }}>
+          <div style={{ padding: "clamp(1.4rem, 4vw, 2rem)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.4rem", gap: 10 }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#ffffff" }}>
+                <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700, color: "var(--nc-text)" }}>
                   Select Session Plan
                 </h2>
-                <div style={{ fontSize: 12.5, color: "var(--text-secondary)", marginTop: 2 }}>
+                <div style={{ fontSize: 12.5, color: "var(--nc-text-secondary)", marginTop: 2 }}>
                   Pay only for the time you need.
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Wallet Balance</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: "#38bdf8" }}>₹{balance}</div>
+                <div style={{ fontSize: 11, color: "var(--nc-text-muted)" }}>Wallet Balance</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: "var(--nc-champagne)" }}>₹{balance}</div>
               </div>
             </div>
 
             {/* Plan cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: "1.8rem" }}>
+            <div className="nc-grid-plans" style={{ marginBottom: "1.8rem" }}>
               {Object.entries(PLANS).map(([key, plan]) => {
                 const isSelected = selectedPlan === key;
                 return (
                   <div
                     key={key}
                     onClick={() => setSelectedPlan(key)}
-                    style={{
-                      background: isSelected
-                        ? "linear-gradient(180deg, rgba(30, 64, 175, 0.35) 0%, rgba(15, 23, 42, 0.7) 100%)"
-                        : "rgba(18, 36, 62, 0.45)",
-                      border: isSelected ? "1.5px solid #38bdf8" : "1px solid rgba(255, 255, 255, 0.15)",
-                      borderRadius: 6,
-                      padding: "14px 12px",
-                      cursor: "pointer",
-                      transition: "all 0.18s ease",
-                      boxShadow: isSelected ? "0 0 16px rgba(56, 189, 248, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3)" : "none",
-                    }}
+                    className={`nc-card nc-card-interactive ${isSelected ? "nc-card-selected" : ""}`}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={e => e.key === "Enter" && setSelectedPlan(key)}
+                    aria-label={`${plan.label} plan, price ₹${plan.price}`}
                   >
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#ffffff" }}>
-                      {plan.label}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--nc-text)" }}>
+                        {plan.label}
+                      </span>
+                      {isSelected && (
+                        <span className="nc-badge nc-badge-champagne" style={{ fontSize: 9.5, padding: "1px 5px" }}>
+                          ✓ Selected
+                        </span>
+                      )}
                     </div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: isSelected ? "#38bdf8" : "#93c5fd", margin: "4px 0" }}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: isSelected ? "var(--nc-champagne)" : "var(--nc-text)", margin: "4px 0" }}>
                       ₹{plan.price}
                     </div>
-                    <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.35 }}>
+                    <div style={{ fontSize: 11, color: "var(--nc-text-secondary)", lineHeight: 1.35 }}>
                       {plan.desc}
                     </div>
                   </div>
@@ -885,36 +870,35 @@ export default function App() {
 
             {/* Model Selection */}
             <div style={{ marginBottom: "1.8rem" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#ffffff", marginBottom: 8, display: "flex", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--nc-text)", marginBottom: 8, display: "flex", justifyContent: "space-between" }}>
                 <span>Select AI Inference Engine</span>
-                <span style={{ fontSize: 11, color: "var(--aero-cyan)" }}>Groq LPU Accelerated</span>
+                <span style={{ fontSize: 11, color: "var(--nc-champagne)" }}>Groq LPU Accelerated</span>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+              <div className="nc-grid-models">
                 {MODELS.map(m => {
                   const isSelected = selectedModel === m.id;
                   return (
                     <div
                       key={m.id}
                       onClick={() => setSelectedModel(m.id)}
-                      style={{
-                        background: isSelected
-                          ? "linear-gradient(180deg, rgba(30, 64, 175, 0.35) 0%, rgba(15, 23, 42, 0.7) 100%)"
-                          : "rgba(18, 36, 62, 0.45)",
-                        border: isSelected ? "1.5px solid #38bdf8" : "1px solid rgba(255, 255, 255, 0.15)",
-                        borderRadius: 6,
-                        padding: "12px",
-                        cursor: "pointer",
-                        transition: "all 0.18s ease",
-                        boxShadow: isSelected ? "0 0 16px rgba(56, 189, 248, 0.35)" : "none",
-                      }}
+                      className={`nc-card nc-card-interactive ${isSelected ? "nc-card-selected" : ""}`}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={e => e.key === "Enter" && setSelectedModel(m.id)}
+                      aria-label={`${m.name} model engine`}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "#ffffff" }}>{m.name}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--nc-text)" }}>{m.name}</span>
+                        {isSelected && (
+                          <span className="nc-badge nc-badge-champagne" style={{ fontSize: 9.5, padding: "1px 5px" }}>
+                            ✓ Selected
+                          </span>
+                        )}
                       </div>
-                      <div style={{ fontSize: 10.5, color: "var(--aero-cyan)", fontWeight: 600, marginBottom: 4 }}>
+                      <div style={{ fontSize: 10.5, color: "var(--nc-champagne)", fontWeight: 600, marginBottom: 4 }}>
                         {m.badge}
                       </div>
-                      <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.3 }}>
+                      <div style={{ fontSize: 11, color: "var(--nc-text-muted)", lineHeight: 1.3 }}>
                         {m.desc}
                       </div>
                     </div>
@@ -927,7 +911,7 @@ export default function App() {
             <button
               onClick={handleStartSession}
               disabled={loading || !canAfford}
-              className="aero-btn aero-btn-primary"
+              className="nc-btn nc-btn-champagne"
               style={{ width: "100%", padding: "12px 0", fontSize: 15, marginBottom: 10 }}
             >
               {loading
@@ -939,14 +923,23 @@ export default function App() {
 
             <button
               onClick={() => setScreen("wallet")}
-              className="aero-btn aero-btn-secondary"
-              style={{ width: "100%", padding: "8px 0", fontSize: 12.5 }}
+              className="nc-btn nc-btn-silver"
+              style={{ width: "100%", padding: "9px 0", fontSize: 13 }}
             >
               ← Manage Wallet Funds
             </button>
 
             {status && (
-              <div style={{ marginTop: 12, fontSize: 12.5, color: "#f87171", textAlign: "center" }}>
+              <div style={{
+                marginTop: 12,
+                fontSize: 12.5,
+                color: "var(--nc-danger)",
+                textAlign: "center",
+                background: "rgba(225, 139, 135, 0.12)",
+                padding: "7px 12px",
+                borderRadius: "var(--radius-sm)",
+                border: "1px solid rgba(225, 139, 135, 0.3)",
+              }}>
                 {status}
               </div>
             )}
@@ -958,52 +951,45 @@ export default function App() {
 
   // ── 5. ACTIVE CHAT SCREEN ──
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", padding: "1rem" }}>
-      <div className="aero-window" style={{ width: "100%", maxWidth: 900, margin: "0 auto", flex: 1, display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", padding: "clamp(0.5rem, 2vw, 1rem)", paddingBottom: "max(clamp(0.5rem, 2vw, 1rem), var(--safe-bottom))" }}>
+      <div className="nc-window" style={{ maxWidth: 940, margin: "0 auto", flex: 1, display: "flex", flexDirection: "column" }}>
+        {/* Requirement 3: Close button navigates to plans/overview without terminating active session */}
         <WindowHeader
-          title={`NeuralCafe Workspace — ${session?.plan ? session.plan.toUpperCase() : "ACTIVE"} Plan · ${userEmail}`}
-          onClose={() => { setSession(null); setScreen("plans"); }}
-          onMinimize={() => {}}
-          onMaximize={() => {}}
+          title={`NeuralCafe Workspace — ${session?.plan ? session.plan.toUpperCase() : "ACTIVE"} · ${userEmail}`}
+          onClose={() => setScreen("plans")}
+          closeAriaLabel="Close chat window and return to configuration"
         />
 
         {/* Workspace Toolbar */}
         <div style={{
-          padding: "10px 16px",
-          background: "rgba(10, 22, 38, 0.7)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
+          padding: "8px 14px",
+          background: "var(--nc-bg-elevated)",
+          borderBottom: "1px solid var(--nc-border)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
-          gap: 12,
+          gap: 10,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{
-              background: "rgba(56, 189, 248, 0.15)",
-              color: "#38bdf8",
-              padding: "4px 10px",
-              borderRadius: 4,
-              fontSize: 12,
-              fontWeight: 700,
-              border: "1px solid rgba(56, 189, 248, 0.35)",
-            }}>
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, minWidth: 0 }}>
+            <span className="nc-badge nc-badge-champagne" style={{ fontSize: 11.5 }}>
               {MODELS.find(m => m.id === selectedModel)?.name || "AI Engine"}
             </span>
-            <span style={{ fontSize: 12.5, color: "var(--text-secondary)" }}>
-              Wallet: <strong style={{ color: "#ffffff" }}>₹{balance}</strong>
+            <span style={{ fontSize: 12, color: "var(--nc-text-secondary)" }}>
+              Wallet: <strong style={{ color: "var(--nc-champagne)" }}>₹{balance}</strong>
             </span>
-            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-              · {tokenInfo ? `${tokenInfo.used.toLocaleString()} / ${tokenInfo.max.toLocaleString()} tokens` : "Token meter ready"}
+            <span style={{ fontSize: 11.5, color: "var(--nc-text-muted)" }}>
+              · {tokenInfo ? `${tokenInfo.used.toLocaleString()} / ${tokenInfo.max.toLocaleString()} tokens` : "Token meter active"}
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             {session && <Timer endsAt={session.endsAt} />}
             <button
               onClick={() => { setSession(null); setScreen("plans"); }}
-              className="aero-btn aero-btn-secondary"
-              style={{ fontSize: 12, padding: "6px 12px" }}
+              className="nc-btn nc-btn-danger"
+              style={{ fontSize: 11.5, padding: "5px 12px", minHeight: 32 }}
+              title="Terminate this session"
             >
               End Session
             </button>
@@ -1013,46 +999,50 @@ export default function App() {
         {/* Message Log */}
         <div style={{
           flex: 1,
-          minHeight: 380,
-          maxHeight: "calc(100vh - 280px)",
+          minHeight: 360,
+          maxHeight: "calc(100vh - 270px)",
           overflowY: "auto",
-          padding: "1.5rem 1.8rem",
-          background: "rgba(6, 14, 26, 0.6)",
+          padding: "clamp(1rem, 3vw, 1.8rem)",
+          background: "var(--nc-bg)",
+          minWidth: 0,
         }}>
           {messages.map((m, i) => (
             <ChatMessage key={i} {...m} />
           ))}
 
           {loading && (
-            <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16 }}>
               <div style={{
-                width: 32,
-                height: 32,
+                width: 30,
+                height: 30,
                 borderRadius: "50%",
-                background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
-                border: "1px solid rgba(56, 189, 248, 0.6)",
-                color: "#ffffff",
+                background: "var(--nc-champagne-surface)",
+                border: "1px solid var(--nc-champagne-muted)",
+                color: "var(--nc-champagne)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 700,
-                boxShadow: "0 0 10px rgba(56, 189, 248, 0.5)",
+                boxShadow: "0 0 8px var(--nc-champagne-glow)",
               }}>
                 AI
               </div>
               <div style={{
-                background: "rgba(12, 24, 42, 0.8)",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                borderRadius: 6,
+                background: "var(--nc-surface)",
+                border: "1px solid var(--nc-border)",
+                borderRadius: "var(--radius-sm)",
                 padding: "8px 14px",
-                fontSize: 13,
-                color: "var(--text-secondary)",
+                fontSize: 12.5,
+                color: "var(--nc-text-secondary)",
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
               }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#38bdf8", animation: "pulse 1.2s infinite ease-in-out" }} />
+                <div
+                  className="nc-pulse"
+                  style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--nc-champagne)" }}
+                />
                 <span>AI is thinking & structuring response...</span>
               </div>
             </div>
@@ -1062,15 +1052,15 @@ export default function App() {
 
         {/* Input Dock */}
         <div style={{
-          padding: "14px 18px",
-          background: "rgba(10, 22, 38, 0.85)",
-          borderTop: "1px solid rgba(255, 255, 255, 0.14)",
+          padding: "10px 14px",
+          background: "var(--nc-bg-elevated)",
+          borderTop: "1px solid var(--nc-border)",
           display: "flex",
-          gap: 12,
+          gap: 10,
           alignItems: "center",
         }}>
           <input
-            className="aero-input"
+            className="nc-input"
             style={{ flex: 1 }}
             placeholder={session ? "Ask a question, request code, or draft content (Enter to send)..." : "Session ended. Return to configuration to start a new one."}
             value={input}
@@ -1081,24 +1071,26 @@ export default function App() {
           <button
             onClick={handleSend}
             disabled={!session || loading || !input.trim()}
-            className="aero-btn aero-btn-primary"
-            style={{ padding: "10px 22px", fontSize: 14 }}
+            className="nc-btn nc-btn-champagne"
+            style={{ padding: "0 20px", fontSize: 13.5 }}
           >
             {loading ? "Sending..." : "Send"}
           </button>
         </div>
 
-        {/* Windows 7 Status Strip */}
+        {/* Status Strip */}
         <div style={{
           padding: "5px 14px",
-          background: "rgba(6, 12, 22, 0.95)",
-          borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+          background: "var(--nc-bg)",
+          borderTop: "1px solid var(--nc-border)",
           display: "flex",
           justifyContent: "space-between",
-          fontSize: 11,
-          color: "var(--text-muted)",
+          fontSize: 10.5,
+          color: "var(--nc-text-muted)",
+          flexWrap: "wrap",
+          gap: 8,
         }}>
-          <div style={{ display: "flex", gap: 14 }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <span>● Supabase Connected</span>
             <span>⚡ Groq Cloud LPU</span>
             <span>🔒 Session Sandboxed</span>
@@ -1110,4 +1102,4 @@ export default function App() {
       </div>
     </div>
   );
-}
+}

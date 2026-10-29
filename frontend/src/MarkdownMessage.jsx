@@ -14,33 +14,34 @@ function CodeBlock({ language, code }) {
   return (
     <div style={{
       margin: '12px 0',
-      borderRadius: '6px',
+      borderRadius: 'var(--radius-md)',
       overflow: 'hidden',
-      border: '1px solid rgba(255, 255, 255, 0.18)',
-      background: 'rgba(8, 16, 28, 0.95)',
+      border: '1px solid var(--nc-border)',
+      background: 'var(--nc-bg)',
       boxShadow: '0 4px 14px rgba(0, 0, 0, 0.45)'
     }}>
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '6px 12px',
-        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '7px 12px',
+        background: 'linear-gradient(180deg, var(--nc-titlebar-top) 0%, var(--nc-titlebar-bottom) 100%)',
+        borderBottom: '1px solid var(--nc-border)',
         fontSize: '11px',
         fontFamily: 'var(--font-mono)',
-        color: '#93c5fd',
+        color: 'var(--nc-champagne)',
         textTransform: 'uppercase',
         letterSpacing: '0.05em'
       }}>
         <span style={{ fontWeight: 600 }}>{language || 'code'}</span>
         <button
           onClick={handleCopy}
+          aria-label="Copy code to clipboard"
           style={{
-            background: copied ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.12)',
-            border: `1px solid ${copied ? '#10b981' : 'rgba(255, 255, 255, 0.25)'}`,
-            color: copied ? '#34d399' : '#e2e8f0',
-            borderRadius: '3px',
+            background: copied ? 'rgba(117, 184, 149, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+            border: `1px solid ${copied ? 'var(--nc-success)' : 'var(--nc-border)'}`,
+            color: copied ? 'var(--nc-success)' : 'var(--nc-text-secondary)',
+            borderRadius: 'var(--radius-sm)',
             padding: '3px 9px',
             fontSize: '11px',
             fontWeight: 600,
@@ -58,7 +59,7 @@ function CodeBlock({ language, code }) {
         fontFamily: 'var(--font-mono)',
         fontSize: '13px',
         lineHeight: 1.55,
-        color: '#f8fafc'
+        color: 'var(--nc-text)'
       }}>
         <code>{code}</code>
       </pre>
@@ -86,13 +87,13 @@ export default function MarkdownMessage({ content }) {
             return (
               <code
                 style={{
-                  background: 'rgba(56, 189, 248, 0.12)',
-                  color: '#7dd3fc',
+                  background: 'rgba(216, 194, 154, 0.1)',
+                  color: 'var(--nc-champagne)',
                   padding: '2px 6px',
                   borderRadius: '3px',
                   fontFamily: 'var(--font-mono)',
                   fontSize: '0.9em',
-                  border: '1px solid rgba(56, 189, 248, 0.25)'
+                  border: '1px solid rgba(216, 194, 154, 0.2)'
                 }}
                 {...props}
               >
