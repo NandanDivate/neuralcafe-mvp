@@ -1,5 +1,7 @@
 // NeuralCafe MVP - Backend Server (Groq + Supabase Edition)
 // Run with: node server.js
+// Required env vars: SUPABASE_URL, SUPABASE_ANON_KEY, GROQ_API_KEY
+// Optional env vars: GEMINI_API_KEY, PORT
 
 require("dotenv").config();
 const express = require("express");
@@ -17,10 +19,17 @@ app.get("/health", (req, res) => {
 
 
 
-const supabase = createClient(
-  "https://kdviazumpgooatuolmdl.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkdmlhenVtcGdvb2F0dW9sbWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjIzNjYsImV4cCI6MjA5MjY5ODM2Nn0.3ukX_fIFXsSd6hqbGekTgBffl-OrL7Y0g7FNvTC0UN8"
-);
+// Validate required environment variables at startup
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error("❌ FATAL: SUPABASE_URL and SUPABASE_ANON_KEY environment variables are required!");
+  console.error("   Set them in your .env file or Render dashboard.");
+  process.exit(1);
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const PLANS = {
   "15min": { duration: 15 * 60 * 1000, price: 5,  maxTokens: 20000 },
@@ -117,6 +126,16 @@ app.get("/api/wallet/:userId", async (req, res) => {
   }
 });
 
+function parseDbDate(dateStr) {
+  if (!dateStr) return new Date();
+  if (typeof dateStr === "number") return new Date(dateStr);
+  const s = String(dateStr);
+  if (s.endsWith("Z") || s.includes("+") || /-\d{2}:\d{2}$/.test(s)) {
+    return new Date(s);
+  }
+  return new Date(s + "Z");
+}
+
 // 4. Start a session
 app.post("/api/session/start", async (req, res) => {
   const { userId, plan } = req.body;
@@ -138,13 +157,13 @@ app.post("/api/session/start", async (req, res) => {
     const newBalance = wallet.balance - price;
     await supabase
       .from("wallets")
-      .update({ balance: newBalance, updated_at: new Date() })
+      .update({ balance: newBalance, updated_at: new Date().toISOString() })
       .eq("user_id", userId);
 
     const endsAt = new Date(Date.now() + duration);
     const { data: session, error } = await supabase
       .from("sessions")
-      .insert({ user_id: userId, plan, ends_at: endsAt, tokens_used: 0, max_tokens: maxTokens })
+      .insert({ user_id: userId, plan, ends_at: endsAt.toISOString(), tokens_used: 0, max_tokens: maxTokens })
       .select()
       .single();
 
@@ -175,7 +194,8 @@ app.post("/api/chat", async (req, res) => {
     console.log("Session lookup:", sessionId, session, error);
     if (error || !session) return res.status(403).json({ error: "Session not found" });
     
-    if (new Date() > new Date(session.ends_at + "Z")) return res.status(403).json({ error: "Session expired" });
+    const endsAt = parseDbDate(session.ends_at);
+    if (Date.now() > endsAt.getTime()) return res.status(403).json({ error: "Session expired" });
     if (session.tokens_used >= session.max_tokens) return res.status(403).json({ error: "Token limit reached" });
 
     if (!sessionHistories[sessionId]) sessionHistories[sessionId] = [];
@@ -185,6 +205,9 @@ app.post("/api/chat", async (req, res) => {
     let tokensUsed;
 
     if (model === "gemini") {
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(400).json({ error: "Gemini API key is not configured on the server. Please select a Groq model." });
+      }
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const history = sessionHistories[sessionId].slice(0, -1).map(m => ({
@@ -197,16 +220,25 @@ app.post("/api/chat", async (req, res) => {
       tokensUsed = Math.ceil(reply.length / 4); // Gemini doesn't return token count, estimate it
     } else {
       const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+      let selectedGroqModel = "openai/gpt-oss-120b";
+      if (model === "qwen" || model === "qwen/qwen3.8-27b") {
+        selectedGroqModel = "qwen/qwen3.8-27b";
+      } else if (model === "gpt-oss-20b" || model === "openai/gpt-oss-20b") {
+        selectedGroqModel = "openai/gpt-oss-20b";
+      } else {
+        selectedGroqModel = "openai/gpt-oss-120b";
+      }
+
       const response = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: selectedGroqModel,
         max_tokens: 1024,
         messages: [
           { role: "system", content: "You are a helpful AI assistant on NeuralCafe, a pay-per-session AI platform. Be helpful, concise, and friendly." },
           ...sessionHistories[sessionId],
         ],
       });
-      reply = response.choices[0].message.content;
-      tokensUsed = response.usage.prompt_tokens + response.usage.completion_tokens;
+      reply = response.choices[0]?.message?.content || "";
+      tokensUsed = (response.usage?.prompt_tokens || 0) + (response.usage?.completion_tokens || 0);
     }
 
     const newTokensUsed = session.tokens_used + tokensUsed;
@@ -218,9 +250,9 @@ app.post("/api/chat", async (req, res) => {
 
     sessionHistories[sessionId].push({ role: "assistant", content: reply });
 
-    const timeLeft = Math.max(0, Math.floor((new Date(session.ends_at) - Date.now()) / 1000));
+    const timeLeft = Math.max(0, Math.floor((endsAt.getTime() - Date.now()) / 1000));
 
-    console.log(`🤖 [${sessionId}] Model: ${model || "llama"} | Tokens: ${newTokensUsed}/${session.max_tokens} | Time left: ${timeLeft}s`);
+    console.log(`🤖 [${sessionId}] Model: ${model || "default"} | Tokens: ${newTokensUsed}/${session.max_tokens} | Time left: ${timeLeft}s`);
     res.json({ reply, tokensUsed: newTokensUsed, maxTokens: session.max_tokens, timeLeft, tokensLeft: session.max_tokens - newTokensUsed });
 
   } catch (error) {
@@ -239,11 +271,12 @@ app.get("/api/session/:sessionId", async (req, res) => {
       .single();
 
     if (!session) return res.status(404).json({ error: "Session not found" });
-    if (new Date() > new Date(session.ends_at)) return res.status(403).json({ error: "Session expired" });
+    const endsAt = parseDbDate(session.ends_at);
+    if (Date.now() > endsAt.getTime()) return res.status(403).json({ error: "Session expired" });
 
     res.json({
       valid: true,
-      timeLeft: Math.max(0, Math.floor((new Date(session.ends_at) - Date.now()) / 1000)),
+      timeLeft: Math.max(0, Math.floor((endsAt.getTime() - Date.now()) / 1000)),
       tokensUsed: session.tokens_used,
       maxTokens: session.max_tokens,
     });
@@ -255,7 +288,7 @@ app.get("/api/session/:sessionId", async (req, res) => {
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`\n🚀 NeuralCafe backend running on http://localhost:${PORT}`);
-  console.log(`⚡ Using Groq — Model: llama-3.3-70b-versatile`);
+  console.log(`⚡ Using Groq models: openai/gpt-oss-120b (smart), qwen/qwen3.8-27b (fast)`);
   console.log(`🗄️  Supabase: ${process.env.SUPABASE_URL ? "✓ Connected" : "✗ MISSING!"}`);
   console.log(`📡 Groq API key: ${process.env.GROQ_API_KEY ? "✓ Loaded" : "✗ MISSING!"}\n`);
 });

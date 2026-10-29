@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { signInWithGoogle, logOut, auth, getRedirectUser } from "./firebase";
 
-const API = "https://neuralcafe-mvp.onrender.com/api";
+const API = import.meta.env.VITE_API_URL || "https://neuralcafe-mvp.onrender.com/api";
 
 const PLANS = {
   "15min": { label: "15 min", price: 5, desc: "Quick burst" },
@@ -243,7 +243,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [tokenInfo, setTokenInfo] = useState(null);
-  const [selectedModel, setSelectedModel] = useState("llama");
+  const [selectedModel, setSelectedModel] = useState("gpt-oss");
   const bottomRef = useRef(null);
 
   // Auto-login if saved
@@ -369,7 +369,8 @@ export default function App() {
       if (res.error.includes("expired") || res.error.includes("Token")) setSession(null);
     } else {
       
-      setMessages(m => [...m, { role: "assistant", content: res.reply, model: selectedModel === "gemini" ? "GEMINI" : "LLAMA" }]);
+      const modelBadge = selectedModel === "gemini" ? "GEMINI" : (selectedModel === "qwen" ? "QWEN" : "GPT-OSS");
+      setMessages(m => [...m, { role: "assistant", content: res.reply, model: modelBadge }]);
       setTokenInfo({ used: res.tokensUsed, max: res.maxTokens });
     }
     setLoading(false);
@@ -492,8 +493,9 @@ export default function App() {
   <div style={{ ...S.label, marginBottom: 8 }}>// Choose Model</div>
   <div style={{ display: "flex", gap: 10 }}>
     {[
-      { id: "llama", label: "Llama 3.3 70B", tag: "Free" },
-      { id: "gemini", label: "Gemini 2.0 Flash", tag: "Free" },
+      { id: "gpt-oss", label: "GPT-OSS 120B", tag: "Groq · Smart" },
+      { id: "qwen", label: "Qwen 3.8 27B", tag: "Groq · Fast" },
+      { id: "gemini", label: "Gemini 2.0 Flash", tag: "Google" },
     ].map(m => (
       <div key={m.id} onClick={() => setSelectedModel(m.id)}
         style={S.planCard(selectedModel === m.id)}>
